@@ -1,0 +1,7 @@
+# Baseline parser/evaluation mapping. This does not encode a Buddy schedule.
+# Spatial/temporal mappings remain available for ZigZag to choose.
+- name: default
+  memory_operand_links:
+    O: O
+    I: I1
+    W: I2

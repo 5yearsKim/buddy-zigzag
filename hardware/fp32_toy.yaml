@@ -1,0 +1,50 @@
+# Manually maintained functional baseline for ZigZag 3.10.0.
+# Provenance: synthetic design assumptions; no measured/synthesized cost data.
+# Cost status: ALL energy and area values below are placeholders.
+#
+# Compute assumption: sixteen independent FP32 MACs, arranged as 4 x 4,
+# sustaining one MAC per unit per cycle. No systolic fill/drain is modeled.
+# input_precision records the intended widths; it does not implement or verify
+# IEEE-754 arithmetic in ZigZag's conventional analytical compute model.
+#
+# Storage assumption: one shared 1 MiB SRAM; inputs and outputs reside here.
+# No private registers, caches, DRAM, DMA, or host/control overhead are modeled.
+# Its single 128-bit read/write port is shared by all operands and directions.
+# I1, I2, and O match the packaged baseline mapping's input, weight, and output.
+#
+# Hold this profile fixed when comparing workloads or mappings. Replace costs
+# only with documented characterization data, or introduce a new named profile.
+name: fp32_toy
+
+operational_array:
+  dimensions: [D1, D2]
+  sizes: [4, 4]
+  systolic_dimensions: []
+  input_precision: [32, 32]
+  unit_energy: 1.0           # PLACEHOLDER: pJ per MAC
+  unit_area: 1.0             # PLACEHOLDER: area per compute unit
+
+memories:
+  shared_sram:
+    size: 8388608            # Bits: 1 MiB = 1024 * 1024 * 8
+    latency: 1               # Assumed memory latency, in cycles
+    r_cost: 1.0              # PLACEHOLDER: pJ per 128-bit read access
+    w_cost: 1.0              # PLACEHOLDER: pJ per 128-bit write access
+    area: 0.0                # PLACEHOLDER: memory area is uncharacterized
+    auto_cost_extraction: false
+    operands: [I1, I2, O]
+    served_dimensions: [D1, D2]  # One instance shared across the whole array
+    ports:
+      - name: rw_port_1
+        type: read_write
+        bandwidth_min: 128   # Bits per cycle; fixed access granularity
+        bandwidth_max: 128
+        allocation:
+          - I1, fh           # From higher memory
+          - I1, tl           # To lower memory / compute
+          - I2, fh
+          - I2, tl
+          - O, fh
+          - O, tl
+          - O, fl            # From lower memory / compute
+          - O, th            # To higher memory

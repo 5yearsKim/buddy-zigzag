@@ -1,0 +1,321 @@
+{
+    "outputs": {
+        "memory": {
+            "utilization": {
+                "O": [
+                    0.5,
+                    5.340576171875e-05
+                ],
+                "I": [
+                    0.09375,
+                    5.340576171875e-05
+                ],
+                "W": [
+                    1.0,
+                    0.09375,
+                    5.340576171875e-05
+                ]
+            },
+            "word_accesses": {
+                "O": [
+                    {
+                        "rd_out_to_low": 16384,
+                        "wr_in_by_low": 16384,
+                        "rd_out_to_high": 2048,
+                        "wr_in_by_high": 0
+                    },
+                    {
+                        "rd_out_to_low": 0,
+                        "wr_in_by_low": 2048,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 0
+                    }
+                ],
+                "I": [
+                    {
+                        "rd_out_to_low": 16384,
+                        "wr_in_by_low": 0,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 512
+                    },
+                    {
+                        "rd_out_to_low": 512,
+                        "wr_in_by_low": 0,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 0
+                    }
+                ],
+                "W": [
+                    {
+                        "rd_out_to_low": 4096,
+                        "wr_in_by_low": 0,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 4096
+                    },
+                    {
+                        "rd_out_to_low": 1024,
+                        "wr_in_by_low": 0,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 1024
+                    },
+                    {
+                        "rd_out_to_low": 1024,
+                        "wr_in_by_low": 0,
+                        "rd_out_to_high": 0,
+                        "wr_in_by_high": 0
+                    }
+                ]
+            }
+        },
+        "energy": {
+            "energy_total": 674385.9199999999,
+            "operational_energy": 262144.0,
+            "memory_energy": 412241.92,
+            "memory_energy_breakdown_per_level": {
+                "O": [
+                    34816.0,
+                    204800.0
+                ],
+                "I": [
+                    16896.0,
+                    51200.0
+                ],
+                "W": [
+                    81.92,
+                    2048.0,
+                    102400.0
+                ]
+            },
+            "memory_energy_breakdown_per_level_per_operand": {
+                "O": [
+                    {
+                        "rd_out_to_low": 16384.0,
+                        "wr_in_by_low": 16384.0,
+                        "rd_out_to_high": 2048.0,
+                        "wr_in_by_high": 0.0
+                    },
+                    {
+                        "rd_out_to_low": 0.0,
+                        "wr_in_by_low": 204800.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 0.0
+                    }
+                ],
+                "I": [
+                    {
+                        "rd_out_to_low": 16384.0,
+                        "wr_in_by_low": 0.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 512.0
+                    },
+                    {
+                        "rd_out_to_low": 51200.0,
+                        "wr_in_by_low": 0.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 0.0
+                    }
+                ],
+                "W": [
+                    {
+                        "rd_out_to_low": 40.96,
+                        "wr_in_by_low": 0.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 40.96
+                    },
+                    {
+                        "rd_out_to_low": 1024.0,
+                        "wr_in_by_low": 0.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 1024.0
+                    },
+                    {
+                        "rd_out_to_low": 102400.0,
+                        "wr_in_by_low": 0.0,
+                        "rd_out_to_high": 0.0,
+                        "wr_in_by_high": 0.0
+                    }
+                ]
+            }
+        },
+        "latency": {
+            "data_onloading": 1536.0,
+            "computation": 17403.0,
+            "data_offloading": 2054.0
+        },
+        "spatial": {
+            "mac_utilization": {
+                "ideal": 1.0,
+                "stalls": 0.9414468769752341,
+                "stalls_onloading": 0.8650931939384339,
+                "stalls_onloading_offloading": 0.780450626399276
+            }
+        }
+    },
+    "inputs": {
+        "accelerator": {
+            "id": 0,
+            "name": "gemmini_fp32_ws_approx",
+            "operational_array": {
+                "operational_unit": {
+                    "energy_cost": 1.0,
+                    "area": 1.0
+                },
+                "dimensions": {
+                    "D1": 4,
+                    "D2": 4
+                },
+                "systolic_dimensions": [
+                    "D1",
+                    "D2"
+                ]
+            },
+            "memory_hierarchy": [
+                "MemoryLevel(instance=weight_register,operands=[I2], served_dimensions=set())",
+                "MemoryLevel(instance=accumulator,operands=[O], served_dimensions={D1, D2})",
+                "MemoryLevel(instance=scratchpad,operands=[I1, I2], served_dimensions={D1, D2})",
+                "MemoryLevel(instance=external_memory,operands=[I1, I2, O], served_dimensions={D1, D2})"
+            ],
+            "mem_hierarchy_dict": {
+                "I2": [
+                    "MemoryLevel(instance=weight_register,operands=[I2], served_dimensions=set())",
+                    "MemoryLevel(instance=scratchpad,operands=[I1, I2], served_dimensions={D1, D2})",
+                    "MemoryLevel(instance=external_memory,operands=[I1, I2, O], served_dimensions={D1, D2})"
+                ],
+                "O": [
+                    "MemoryLevel(instance=accumulator,operands=[O], served_dimensions={D1, D2})",
+                    "MemoryLevel(instance=external_memory,operands=[I1, I2, O], served_dimensions={D1, D2})"
+                ],
+                "I1": [
+                    "MemoryLevel(instance=scratchpad,operands=[I1, I2], served_dimensions={D1, D2})",
+                    "MemoryLevel(instance=external_memory,operands=[I1, I2, O], served_dimensions={D1, D2})"
+                ]
+            },
+            "dataflows": {
+                "D1": {
+                    "K": 4
+                },
+                "D2": {
+                    "N": 4
+                }
+            },
+            "mem_size_dict": {
+                "I2": [
+                    32,
+                    2097152,
+                    8589934592
+                ],
+                "O": [
+                    524288,
+                    8589934592
+                ],
+                "I1": [
+                    2097152,
+                    8589934592
+                ]
+            },
+            "mem_r_bw_dict": {},
+            "mem_w_bw_dict": {},
+            "mem_r_bw_min_dict": {},
+            "mem_w_bw_min_dict": {},
+            "mem_sharing_list": [
+                {
+                    "I1": 0,
+                    "I2": 1
+                },
+                {
+                    "I1": 1,
+                    "I2": 2,
+                    "O": 1
+                }
+            ]
+        },
+        "layer": {
+            "name": "matmul_0",
+            "type": "Gemm",
+            "equation": "O[m][n] = I[m][k] * W[k][n]",
+            "equation_relations": [],
+            "loop_dimensions": {
+                "M": 64,
+                "N": 128,
+                "K": 32
+            },
+            "operand_precision": {
+                "I": 32,
+                "W": 32,
+                "O": 32,
+                "O_final": 32
+            },
+            "user_spatial_mapping": {
+                "D1": {
+                    "K": 4
+                },
+                "D2": {
+                    "N": 4
+                }
+            },
+            "memory_operand_links": {
+                "O": "O",
+                "I": "I1",
+                "W": "I2"
+            }
+        },
+        "spatial_mapping": {
+            "O": [
+                [
+                    "(K, 4)",
+                    "(N, 4)"
+                ],
+                [],
+                []
+            ],
+            "I": [
+                [
+                    "(K, 4)",
+                    "(N, 4)"
+                ],
+                [],
+                []
+            ],
+            "W": [
+                [],
+                [
+                    "(K, 4)",
+                    "(N, 4)"
+                ],
+                [],
+                []
+            ]
+        },
+        "temporal_mapping": {
+            "O": [
+                [
+                    "(M, 64)",
+                    "(N, 32)",
+                    "(K, 2)",
+                    "(K, 4)"
+                ],
+                []
+            ],
+            "I": [
+                [
+                    "(M, 64)",
+                    "(N, 32)",
+                    "(K, 2)",
+                    "(K, 4)"
+                ],
+                []
+            ],
+            "W": [
+                [
+                    "(M, 64)"
+                ],
+                [
+                    "(N, 32)",
+                    "(K, 2)",
+                    "(K, 4)"
+                ],
+                []
+            ]
+        }
+    }
+}

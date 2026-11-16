@@ -1,0 +1,9 @@
+- id: 0
+  name: matmul_0
+  operator_type: Gemm
+  equation: O[m][n]+=I[m][k]*W[k][n]
+  dimension_relations: []
+  loop_dims: [M, N, K]
+  loop_sizes: [3, 7, 5]
+  operand_precision: {I: 32, W: 32, O: 32, O_final: 32}
+  operand_source: {}

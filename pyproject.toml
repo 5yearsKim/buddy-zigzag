@@ -1,0 +1,46 @@
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[project]
+name = "buddy-zigzag"
+version = "0.1.0"
+description = "Bridge Buddy workloads, resolved Gemmini hardware, and ZigZag schedules"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.7,<3",
+    "torch>=2",
+    "zigzag-dse==3.10.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.12"]
+
+[project.scripts]
+buddy-zigzag = "buddy_zigzag.cli:main"
+
+[tool.uv.sources]
+zigzag-dse = { path = "third_party/zigzag", editable = true }
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.build-backend]
+source-include = [".env.example", ".python-version", "docs/**", "tests/**", "hardware/**"]
+source-exclude = [".env", "artifacts/**", "third_party/**"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

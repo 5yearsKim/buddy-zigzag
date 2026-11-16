@@ -1,0 +1,44 @@
+# Analytical template, separate from the resolved Scala structural parameters.
+schema_version: 1
+name: gemmini_fp32_ws_approx
+dataflow: WS
+cost_status: placeholder
+cost_source: Synthetic functional-test costs; no physical characterization.
+assumptions:
+  - WS binds array rows to K and columns to N; temporal schedules remain searchable.
+  - One 32-bit weight register is modeled per MAC; register timing and costs are assumptions.
+  - Scratchpad banks are aggregated into one shared SRAM with one row-wide read/write port.
+  - Scratchpad bank parallelism and conflicts are not modeled; bandwidth is not banks times row width.
+  - Accumulator banks are aggregated into a shared SRAM; dual-ported configurations get one read and one write port.
+  - Source read-delay parameters are used as symmetric memory latency; write latency is not separately characterized.
+  - Output traffic goes between the accumulator and external memory; optional scratchpad output paths are omitted.
+  - External memory is assumed to have 1 GiB capacity; its interface bandwidth is capped by the Gemmini DMA width.
+  - External-memory latency and energy are assumptions; cache, TLB, DMA queues, bursts and SoC contention are omitted.
+  - ZigZag models systolic drain on the selected axes but does not reproduce Gemmini tile latency or pipeline timing.
+  - The conventional ZigZag compute model assumes one MAC per unit per cycle; FP32 behavior is not simulated.
+compute:
+  energy_per_mac_pj: 1.0
+  area_per_mac: 1.0
+  systolic_dimensions: [D1, D2]
+weight_register:
+  latency_cycles: 1
+  read_energy_pj: 0.01
+  write_energy_pj: 0.01
+  area: 0.0
+scratchpad:
+  read_energy_pj: 1.0
+  write_energy_pj: 1.0
+  area: 0.0
+accumulator:
+  read_energy_pj: 1.0
+  write_energy_pj: 1.0
+  area: 0.0
+external_memory:
+  capacity_bits: 8589934592
+  latency_cycles: 20
+  bandwidth_bits_per_cycle: null # Use DMA bus width; an explicit value must not exceed it.
+  read_energy_pj: 100.0
+  write_energy_pj: 100.0
+  area: 0.0
+scratchpad_port_model: one_shared_row_per_cycle
+accumulator_port_model: one_row_per_direction_when_dual_ported

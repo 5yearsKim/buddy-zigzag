@@ -1,0 +1,9 @@
+# Physical mapping for the generated 4x4 FP32 Gemmini profile.
+- name: default
+  spatial_mapping:
+    D1: ["K, 4"]
+    D2: ["N, 4"]
+  memory_operand_links:
+    O: O
+    I: I1
+    W: I2

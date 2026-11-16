@@ -1,0 +1,9 @@
+[submodule "buddy-mlir"]
+	path = third_party/buddy-mlir
+	url = git@github.com:5yearsKim/buddy-mlir.git
+[submodule "zigzag"]
+	path = third_party/zigzag
+	url = git@github.com:KULeuven-MICAS/zigzag.git
+[submodule "chipyard"]
+	path = third_party/chipyard
+	url = git@github.com:ucb-bar/chipyard.git
