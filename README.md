@@ -43,8 +43,11 @@ stages `02_scheduled.mlir`, `03_bufferized.mlir`, `04_gemmini.mlir`,
 separate CPU LLVM IR files.
 
 Schedule compilation currently supports one FP32 matmul. Gemmini uses
-weight-stationary (WS) tile projection with fixed kernel ordering. RISC-V
-linking and Chipyard execution are a later step.
+weight-stationary (WS) tile projection with fixed kernel ordering. Maintain
+`workload_config.h` manually, then use Bazel to run Buddy's `llc`, cross-compile
+the static C harness/runtime, and link `program.riscv`. Follow
+[simulation/README.md](simulation/README.md) to build and run through Chipyard
+using Bazel and shell commands. The Python pipeline stops at LLVM IR generation.
 
 Use `prepare-workload --snapshot <Gemmini JSON>` to generate layer-specific
 mapping constraints after workload extraction. The current rule validates one
@@ -69,7 +72,9 @@ src/buddy_zigzag/
     common/         # Shared schema types, runtime errors, and artifact helpers
     pipeline.py     # DsePipeline orchestration and PrepareRequest
     settings.py     # Native runtime configuration
-    cli.py          # prepare-workload, prepare-hardware, search, compile
+    cli.py          # Preparation, search, and compilation
+simulation/         # Bazel build commands, local compiler inputs, reusable C sources, and terminal guide
+MODULE.bazel        # Bazel module and local input selection
 hw_config/          # Generated hardware YAML, manifests, and parameter snapshots; ignored by Git
 third_party/        # Buddy-MLIR, ZigZag, Chipyard submodules
 artifacts/          # Generated workloads, search results, and code; ignored by Git
@@ -121,5 +126,6 @@ For computation-only preparation, use `WorkloadBuilder.build_case()` or
 1. [Install the package](docs/installation.md).
 2. [Set up native tools and hardware](docs/setup.md).
 3. [Generate code from Torch](docs/quick_start.md).
+4. [Build and run a bare-metal RTL simulation](docs/simulation.md).
 
 For development: `uv run pytest -q` and `uv run ruff check src tests`.

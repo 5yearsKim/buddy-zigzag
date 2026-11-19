@@ -1,0 +1,8 @@
+module(
+    name = "buddy_zigzag",
+    version = "0.1.0",
+    bazel_compatibility = [">=7.4.0"],
+)
+
+local_inputs = use_repo_rule("//simulation:local_inputs.bzl", "local_inputs")
+local_inputs(name = "simulation_inputs")

@@ -65,6 +65,7 @@ def main(argv=None) -> int:
     )
     compile_command.add_argument("--verify", action="store_true", help="Execute scheduled Linalg on CPU against Torch")
     compile_command.add_argument("--trials", type=int, default=3, help="Random native verification trials, default 3")
+
     args = parser.parse_args(argv)
     try:
         settings = Settings.load(args.env_file)

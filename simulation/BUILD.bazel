@@ -1,0 +1,76 @@
+package(default_visibility = ["//visibility:public"])
+
+# These are ordinary local shell commands. Compiler/runtime files are declared
+# as tools so Bazel also notices changes to the installed compilers.
+genrule(
+    name = "kernel_object",
+    srcs = ["@simulation_inputs//:kernel.ll"],
+    tools = [
+        "@simulation_inputs//:llvm/bin/llc",
+        "@simulation_inputs//:llvm_support",
+    ],
+    outs = ["program/kernel.o"],
+    cmd = """
+        "$(location @simulation_inputs//:llvm/bin/llc)" \
+          -mtriple=riscv64-unknown-elf \
+          -mattr=+m,+a,+f,+d,+c,+xgemmini \
+          -target-abi=lp64d -code-model=medium -filetype=obj \
+          "$(location @simulation_inputs//:kernel.ll)" -o "$@"
+    """,
+    local = True,
+)
+
+genrule(
+    name = "main_object",
+    srcs = ["main.c", "memref_runtime.h", "@simulation_inputs//:workload_config.h"],
+    tools = [
+        "@simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc",
+        "@simulation_inputs//:gcc_support",
+    ],
+    outs = ["program/main.o"],
+    cmd = """
+        "$(location @simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc)" \
+          -march=rv64gc -mabi=lp64d -mcmodel=medany \
+          -std=gnu99 -O2 -fno-common \
+          -I "$$(dirname "$(location @simulation_inputs//:workload_config.h)")" \
+          -I "$$(dirname "$(location memref_runtime.h)")" \
+          -c "$(location main.c)" -o "$@"
+    """,
+    local = True,
+)
+
+genrule(
+    name = "runtime_object",
+    srcs = ["memref_runtime.c", "memref_runtime.h"],
+    tools = [
+        "@simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc",
+        "@simulation_inputs//:gcc_support",
+    ],
+    outs = ["program/memref_runtime.o"],
+    cmd = """
+        "$(location @simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc)" \
+          -march=rv64gc -mabi=lp64d -mcmodel=medany \
+          -std=gnu99 -O2 -fno-common \
+          -I "$$(dirname "$(location memref_runtime.h)")" \
+          -c "$(location memref_runtime.c)" -o "$@"
+    """,
+    local = True,
+)
+
+genrule(
+    name = "program",
+    srcs = [":kernel_object", ":main_object", ":runtime_object"],
+    tools = [
+        "@simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc",
+        "@simulation_inputs//:gcc_support",
+    ],
+    outs = ["program/program.riscv"],
+    cmd = """
+        "$(location @simulation_inputs//:riscv/bin/riscv64-unknown-elf-gcc)" \
+          -march=rv64gc -mabi=lp64d -mcmodel=medany \
+          --specs=htif_nano.specs -static \
+          "$(location :main_object)" "$(location :runtime_object)" \
+          "$(location :kernel_object)" -lm -o "$@"
+    """,
+    local = True,
+)

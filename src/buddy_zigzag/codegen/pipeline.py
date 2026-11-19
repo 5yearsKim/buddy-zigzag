@@ -81,6 +81,7 @@ class ScheduleCompiler:
                     "result_sha256": schedule.result_sha256,
                     "scheduled_sha256": digest(scheduled),
                     "entry_point": code.entry_point,
+                    "llvm_ir_sha256": digest(code.llvm_ir),
                     "versions": versions(self.settings),
                 },
             )
@@ -120,7 +121,7 @@ class ScheduleCompiler:
             native_verification=verification,
             gemmini_execution={
                 "status": "not_run",
-                "reason": "RISC-V linking and Chipyard simulation are a later step",
+                "reason": "Build with Bazel and run Chipyard separately; see simulation/README.md",
             },
         )
         write_json(
@@ -133,6 +134,7 @@ class ScheduleCompiler:
                 "snapshot_sha256": schedule.snapshot_sha256,
                 "scheduled_sha256": digest(scheduled),
                 "execution_target": schedule.execution_target,
+                "llvm_ir_sha256": digest(code.llvm_ir),
                 "versions": versions(self.settings),
             },
         )

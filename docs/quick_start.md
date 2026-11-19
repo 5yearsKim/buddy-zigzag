@@ -66,7 +66,8 @@ uv run buddy-zigzag compile --target gemmini \
 
 The schedule compiler applies M/N tiles to Linalg. Buddy lowers each tile to Gemmini WS
 operations, retaining accumulation across K tiles. The final `06_lowered.ll`
-contains Gemmini RISC-V intrinsics; linking and Chipyard execution come later.
+contains Gemmini RISC-V intrinsics. Continue with the
+[simulation guide](simulation.md) to link and execute it in Chipyard.
 `--verify` executes the tiled Linalg on CPU and compares it with Torch, without
 saving a separate CPU LLVM IR artifact. Omit it to skip CPU verification.
 

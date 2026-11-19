@@ -58,7 +58,8 @@ git -C third_party/buddy-mlir submodule update --init llvm
 
 ## Fresh Chipyard setup
 
-Only needed to export parameters from your own Gemmini configuration.
+Needed to export parameters from your own Gemmini configuration or build and
+run the RTL simulator described in the [simulation guide](simulation.md).
 With Conda installed, initialize Chipyard and its optional Gemmini dependency:
 
 ```bash

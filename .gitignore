@@ -12,3 +12,4 @@ dist/
 artifacts/*
 !artifacts/.gitkeep
 /hw_config/
+/bazel-*
