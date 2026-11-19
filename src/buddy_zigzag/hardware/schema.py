@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, StrictBool, model_validator
 
-from ..exporter.schema import NonNegativeInt, PositiveInt, Schema
+from ..common.schema import NonNegativeInt, PositiveInt, Schema
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 Revision = Annotated[str, Field(pattern=r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")]

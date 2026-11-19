@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from buddy_zigzag.exporter.schema import ExportRequest, Operand, TensorSpec, WorkloadCase
+from buddy_zigzag.workload.schema import Operand, TensorSpec, WorkloadBuildRequest, WorkloadCase
 
 
 @pytest.mark.parametrize("shape", [(0, 5), (-1, 5), (True, 5), ("3", 5), ()])
@@ -41,6 +41,6 @@ def test_case_validation_rejects_malformed_workloads(data):
 
 def test_export_request_requires_exactly_one_source():
     with pytest.raises(ValidationError, match="exactly one"):
-        ExportRequest()
+        WorkloadBuildRequest()
     with pytest.raises(ValidationError, match="exactly one"):
-        ExportRequest(case="matmul_rect", mlir="model.mlir")
+        WorkloadBuildRequest(case="matmul_rect", mlir="model.mlir")

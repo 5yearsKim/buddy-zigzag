@@ -35,7 +35,7 @@ explicit = true
 testpaths = ["tests"]
 
 [tool.uv.build-backend]
-source-include = [".env.example", ".python-version", "docs/**", "tests/**", "hardware/**"]
+source-include = [".env.example", ".python-version", "docs/**", "tests/**"]
 source-exclude = [".env", "artifacts/**", "hw_config/**", "third_party/**"]
 
 [tool.ruff]

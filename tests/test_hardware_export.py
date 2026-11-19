@@ -9,7 +9,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from buddy_zigzag import GemminiHardwareExporter, ZigzagExporter
+from buddy_zigzag import DsePipeline, GemminiHardwareExporter
 from buddy_zigzag.cli import main
 from buddy_zigzag.hardware import GemminiModelTemplate, GemminiSnapshot, HardwareExportError
 
@@ -151,13 +151,13 @@ def test_source_cannot_be_overwritten_by_manifest(tmp_path):
 
 def test_hardware_export_cli(tmp_path):
     output = tmp_path / "generated.yaml"
-    assert main(["hardware-export", "--snapshot", str(SNAPSHOT), "--out", str(output)]) == 0
+    assert main(["prepare-hardware", "--snapshot", str(SNAPSHOT), "--out", str(output)]) == 0
     assert output.exists()
     assert output.with_suffix(".manifest.json").exists()
 
 
 def test_hardware_export_cli_defaults_to_project_hw_config(tmp_path):
-    assert main(["--env-file", str(tmp_path / ".env"), "hardware-export", "--snapshot", str(SNAPSHOT)]) == 0
+    assert main(["--env-file", str(tmp_path / ".env"), "prepare-hardware", "--snapshot", str(SNAPSHOT)]) == 0
     output = tmp_path / "hw_config/hardware.yaml"
     assert yaml.safe_load(output.read_text())["operational_array"]["sizes"] == [4, 4]
     assert output.with_suffix(".manifest.json").exists()
@@ -165,20 +165,20 @@ def test_hardware_export_cli_defaults_to_project_hw_config(tmp_path):
 
 
 def test_generated_profile_runs_a_real_zigzag_matmul(tmp_path):
-    from zigzag.api import get_hardware_performance_zigzag
-
     output = tmp_path / "hardware.yaml"
     GemminiHardwareExporter().export(SNAPSHOT, output)
-    workload = ZigzagExporter().export_case("matmul_small", output_dir=tmp_path / "workload")
-    energy, cycles, results = get_hardware_performance_zigzag(
-        workload=str(workload.output_dir / "workload.yaml"),
-        accelerator=str(output),
-        mapping=str(workload.output_dir / "mapping.yaml"),
-        dump_folder=str(tmp_path / "evaluation"),
-        nb_spatial_mappings_generated=1,
-        lpf_limit=4,
-        loma_show_progress_bar=False,
+    workload = DsePipeline().prepare_case("matmul_small", output_dir=tmp_path / "workload")
+    search_dir = tmp_path / "zigzag"
+    assert (
+        main(
+            ["search", "--workload-dir", str(workload.output_dir), "--hardware", str(output), "--out", str(search_dir)]
+        )
+        == 0
     )
-    assert math.isfinite(energy) and energy > 0
-    assert math.isfinite(cycles) and cycles > 0
-    assert results
+    report = json.loads((search_dir / "search.json").read_text())
+    assert report["status"] == "passed"
+    result = report["result"]
+    assert math.isfinite(result["energy"]) and result["energy"] > 0
+    assert math.isfinite(result["latency"]) and result["latency"] > 0
+    assert result["mappings"] == [str(search_dir / "matmul_0_complete.json")]
+    assert Path(result["mappings"][0]).is_file()

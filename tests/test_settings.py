@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from buddy_zigzag.exporter.errors import ExportError
+from buddy_zigzag.common.errors import ConfigurationError
 from buddy_zigzag.settings import Settings
 
 
@@ -42,5 +42,5 @@ def test_runtime_exposes_configured_paths_without_shell_setup(tmp_path, monkeypa
 def test_mismatched_native_python_version_has_a_clear_error(tmp_path, monkeypatch):
     settings = Settings(_env_file=None, buddy_zigzag_python=tmp_path / "python")
     monkeypatch.setattr("buddy_zigzag.settings.subprocess.run", lambda *a, **kw: SimpleNamespace(stdout="0.0\n"))
-    with pytest.raises(ExportError, match="Buddy requires Python 0.0"):
+    with pytest.raises(ConfigurationError, match="Buddy requires Python 0.0"):
         settings.configure_runtime()

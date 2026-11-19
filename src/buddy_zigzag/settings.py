@@ -8,7 +8,7 @@ from pathlib import Path
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .exporter.errors import ExportError
+from .common.errors import ConfigurationError
 
 
 class Settings(BaseSettings):
@@ -57,10 +57,12 @@ class Settings(BaseSettings):
                     check=True,
                 )
             except (OSError, subprocess.CalledProcessError) as exc:
-                raise ExportError(f"Cannot inspect Buddy's reference interpreter: {self.buddy_zigzag_python}") from exc
+                raise ConfigurationError(
+                    f"Cannot inspect Buddy's reference interpreter: {self.buddy_zigzag_python}"
+                ) from exc
             current = f"{sys.version_info.major}.{sys.version_info.minor}"
             if result.stdout.strip() != current:
-                raise ExportError(
+                raise ConfigurationError(
                     f"Buddy requires Python {result.stdout.strip()}; current Python is {current}. "
                     "Select a matching uv interpreter."
                 )

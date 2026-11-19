@@ -86,7 +86,7 @@ mkdir -p hw_config
   source env.sh
   sbt "gemmini/runMain gemmini.GemminiConfigExportMain --output $bridge_root/hw_config/fp32_parameters.json"
 )
-uv run buddy-zigzag hardware-export \
+uv run buddy-zigzag prepare-hardware \
   --snapshot hw_config/fp32_parameters.json
 ```
 
@@ -98,7 +98,8 @@ To capture actual elaboration parameters, set `GEMMINI_CONFIG_NAME` and
 `GEMMINI_CONFIG_JSON_DIR` during a Chipyard build.
 
 The current model supports square FP32 arrays with 1×1 PE tiles and WS dataflow.
-Energy/area costs are placeholders. When changing the array size, update the
-K/N spatial factors in `hardware/gemmini_fp32_ws_mapping.yaml` to match.
+Energy/area costs are placeholders. When changing the array size, regenerate the
+hardware YAML and prepare workloads with `--snapshot` pointing to the same JSON.
+`MappingConstraintGenerator` derives the K/N spatial factors from those resolved dimensions.
 
 Continue with the [quick start](quick_start.md).
