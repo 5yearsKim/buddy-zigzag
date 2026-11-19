@@ -156,6 +156,14 @@ def test_hardware_export_cli(tmp_path):
     assert output.with_suffix(".manifest.json").exists()
 
 
+def test_hardware_export_cli_defaults_to_project_hw_config(tmp_path):
+    assert main(["--env-file", str(tmp_path / ".env"), "hardware-export", "--snapshot", str(SNAPSHOT)]) == 0
+    output = tmp_path / "hw_config/hardware.yaml"
+    assert yaml.safe_load(output.read_text())["operational_array"]["sizes"] == [4, 4]
+    assert output.with_suffix(".manifest.json").exists()
+    assert not (tmp_path / "artifacts").exists()
+
+
 def test_generated_profile_runs_a_real_zigzag_matmul(tmp_path):
     from zigzag.api import get_hardware_performance_zigzag
 

@@ -31,8 +31,9 @@ src/buddy_zigzag/
     importer/       # ZigZag mapping → scheduled and lowered code
     cli.py          # export, hardware-export, import
 hardware/           # Hardware profiles and spatial mappings
+hw_config/          # Generated hardware YAML, manifests, and parameter snapshots; ignored by Git
 third_party/        # Buddy-MLIR, ZigZag, Chipyard submodules
-artifacts/          # Generated outputs; ignored by Git
+artifacts/          # Generated workloads, search results, and code; ignored by Git
 docs/               # Installation, setup, and example workflow
 tests/
 ```

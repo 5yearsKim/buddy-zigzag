@@ -48,13 +48,14 @@ def main(argv=None) -> int:
         "--template", type=Path, help="Model/cost assumptions; defaults to the packaged FP32 WS model"
     )
     hardware.add_argument(
-        "--out", type=Path, required=True, help="Output hardware .yaml; also writes a provenance manifest"
+        "--out", type=Path, help="Output hardware .yaml; default: hw_config/hardware.yaml; also writes a manifest"
     )
     args = parser.parse_args(argv)
     try:
         settings = Settings.load(args.env_file)
         if args.command == "hardware-export":
-            result = GemminiHardwareExporter().export(args.snapshot, args.out, template_path=args.template)
+            output = args.out if args.out is not None else settings.project_dir / "hw_config/hardware.yaml"
+            result = GemminiHardwareExporter().export(args.snapshot, output, template_path=args.template)
             print(f"Validated ZigZag hardware: {result.hardware_path}")
             print(f"Resolved parameters and modeling assumptions: {result.manifest_path}")
         elif args.command == "import":

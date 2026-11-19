@@ -79,19 +79,20 @@ With Chipyard prepared and the Gemmini JSON exporter present, export the resolve
 `GemminiFPConfigs.FP32DefaultConfig` parameters:
 
 ```bash
-mkdir -p artifacts/hardware
+mkdir -p hw_config
 (
   bridge_root="$PWD"
   cd third_party/chipyard
   source env.sh
-  sbt "gemmini/runMain gemmini.GemminiConfigExportMain --output $bridge_root/artifacts/hardware/fp32_parameters.json"
+  sbt "gemmini/runMain gemmini.GemminiConfigExportMain --output $bridge_root/hw_config/fp32_parameters.json"
 )
 uv run buddy-zigzag hardware-export \
-  --snapshot artifacts/hardware/fp32_parameters.json \
-  --out artifacts/hardware/gemmini_fp32.yaml
+  --snapshot hw_config/fp32_parameters.json
 ```
 
-The outputs are hardware YAML and a provenance manifest. This snapshot resolves
+The default outputs are `hw_config/hardware.yaml` and
+`hw_config/hardware.manifest.json`; use `--out` to choose another path.
+The generated `hw_config/` directory is ignored by Git. This snapshot resolves
 the Scala configuration object; it does not elaborate a complete SoC.
 To capture actual elaboration parameters, set `GEMMINI_CONFIG_NAME` and
 `GEMMINI_CONFIG_JSON_DIR` during a Chipyard build.

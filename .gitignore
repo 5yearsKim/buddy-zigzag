@@ -11,3 +11,4 @@ build/
 dist/
 artifacts/*
 !artifacts/.gitkeep
+/hw_config/

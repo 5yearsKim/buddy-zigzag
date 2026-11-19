@@ -36,7 +36,7 @@ testpaths = ["tests"]
 
 [tool.uv.build-backend]
 source-include = [".env.example", ".python-version", "docs/**", "tests/**", "hardware/**"]
-source-exclude = [".env", "artifacts/**", "third_party/**"]
+source-exclude = [".env", "artifacts/**", "hw_config/**", "third_party/**"]
 
 [tool.ruff]
 line-length = 120

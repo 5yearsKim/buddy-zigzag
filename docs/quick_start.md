@@ -22,12 +22,13 @@ uv run buddy-zigzag export --case matmul_small \
   --mapping hardware/gemmini_fp32_ws_mapping.yaml \
   --out artifacts/quick_start/workload
 uv run buddy-zigzag hardware-export \
-  --snapshot tests/fixtures/hardware/fp32_parameters.json \
-  --out artifacts/quick_start/hardware.yaml
+  --snapshot tests/fixtures/hardware/fp32_parameters.json
 ```
 
 Buddy imports Torch to Linalg; the exporter writes ZigZag workload YAML.
 The explicit spatial mapping binds array rows to K and columns to N.
+Hardware export writes `hw_config/hardware.yaml` and
+`hw_config/hardware.manifest.json` in the Git-ignored `hw_config/` directory.
 
 ## 2. Search for a mapping with ZigZag
 
@@ -37,7 +38,7 @@ from zigzag.api import get_hardware_performance_zigzag
 
 get_hardware_performance_zigzag(
     workload="artifacts/quick_start/workload/workload.yaml",
-    accelerator="artifacts/quick_start/hardware.yaml",
+    accelerator="hw_config/hardware.yaml",
     mapping="artifacts/quick_start/workload/mapping.yaml",
     dump_folder="artifacts/quick_start/evaluation",
     nb_spatial_mappings_generated=1,
