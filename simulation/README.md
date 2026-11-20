@@ -118,7 +118,6 @@ All paths below are relative to your workload:
 | `simulation/simulator-build.log` | RTL build output |
 | `simulation/simulation.log` | Latest simulator run and numerical result |
 | `simulation/chipyard/` | Additional Chipyard output |
-| `simulation/rtl-config/<config>/gemmini-0.json` | Hardware snapshot, if elaboration exports it |
 
 A stage's log is replaced when that stage runs again. A failing run never uses
 an older result to report success. Build-only and run-only leave skipped stages'
@@ -126,9 +125,10 @@ logs intact.
 
 `FPGemminiRocketConfig` is the FP32 config matching the bundled 4x4 snapshot.
 Select the same hardware used for mapping and compilation. RTL elaboration can
-regenerate Gemmini's parameter header and other files under Chipyard. Cached
-elaboration may not write a fresh hardware snapshot; keep snapshots paired with
-their simulator and compare with the hardware recorded in `lowered/schedule.json`
-manually. The script does not verify hardware identity.
+regenerate Gemmini's parameter header and other files under Chipyard. Hardware
+JSON export is a separate project-owned command, described in
+[setup](../docs/setup.md#generate-hardware-configuration); no source hook is added
+to Gemmini. Keep the snapshot paired with the selected simulator configuration.
+The script does not verify hardware identity.
 
 Developer checks are described in [docs/simulation.md](../docs/simulation.md#optional-developer-checks).

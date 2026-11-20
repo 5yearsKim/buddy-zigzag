@@ -44,6 +44,7 @@ source-include = [
     "docs/**",
     "tests/**",
     "simulation/**",
+    "scripts/**",
 ]
 source-exclude = [".env", "artifacts/**", "hw_config/**", "third_party/**"]
 

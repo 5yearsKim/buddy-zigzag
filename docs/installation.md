@@ -21,7 +21,8 @@ An existing checkout with working native builds can go directly to the quick sta
 
 ## Sharing a reproducible checkout
 
-The Buddy scheduling changes and Gemmini JSON exporter currently include local
-uncommitted edits. Commit and push them in their dependency forks, then update
-Gemmini's pointer in Chipyard and the dependency pointers here before publishing.
-A clone receives committed files only.
+The Gemmini scheduling passes and Scala configuration exporter are maintained in
+this repository. Third-party source checkouts use their pinned commits without
+local patches. Build Buddy with plugin symbol exports as described in
+[setup](setup.md), then the first Gemmini compilation builds our pass plugin
+under `build/gemmini-plugin/`. A matching C++17 compiler and CMake are required.

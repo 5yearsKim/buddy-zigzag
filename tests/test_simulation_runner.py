@@ -57,7 +57,7 @@ chmod 444 bazel-bin/simulation/program/program.riscv
     executable(
         tools / "make",
         """printf 'make %s\\n' "$*" >> "$CALLS"
-printf 'snapshot %s\\n' "$GEMMINI_CONFIG_JSON_DIR" >> "$CALLS"
+printf 'snapshot %s\\n' "${GEMMINI_CONFIG_JSON_DIR:-unset}" >> "$CALLS"
 if [[ " $* " = *' run-binary-fast '* ]]; then
   printf '%s\\n' "$RECORD"
   if [[ ${FAIL_STAGE:-} = run ]]; then exit 4; fi
@@ -69,8 +69,14 @@ fi
     env = os.environ.copy()
     # Do not let a developer's toolchain or workload selections affect tests.
     for key in (
-        "BUDDY_LLVM_DIR", "RISCV_TOOLCHAIN_DIR", "BUDDY_LOWERED_DIR", "CHIPYARD_DIR",
-        "BASH_ENV", "SHELLOPTS", "FAIL_STAGE", "OPTIONAL_CHIPYARD_VARIABLE",
+        "BUDDY_LLVM_DIR",
+        "RISCV_TOOLCHAIN_DIR",
+        "BUDDY_LOWERED_DIR",
+        "CHIPYARD_DIR",
+        "BASH_ENV",
+        "SHELLOPTS",
+        "FAIL_STAGE",
+        "OPTIONAL_CHIPYARD_VARIABLE",
     ):
         env.pop(key, None)
     env.update(
@@ -110,7 +116,7 @@ def test_default_builds_runs_and_preserves_manual_header(runner):
     assert "BREAK_SIM_PREREQ=1" in commands
     assert commands.count("make ") == 2
     assert "/old/" not in commands
-    assert f"snapshot {workload}/simulation/rtl-config/FPGemminiRocketConfig" in commands
+    assert "snapshot unset" in commands
     for name in ("program-build.log", "simulator-build.log", "simulation.log"):
         assert (workload / "simulation" / name).is_file()
 

@@ -155,11 +155,9 @@ fi
   trap - ERR
   command -v verilator >/dev/null || die 'Verilator was not found. Please check your Chipyard environment.'
 
-  # Compute this from the chosen workload, never from inherited shell values.
-  # A cached elaboration may not emit a fresh snapshot; see the README.
-  export GEMMINI_CONFIG_NAME="$config"
-  export GEMMINI_CONFIG_JSON_DIR="$sim_dir/rtl-config/$config"
-  mkdir -p -- "$GEMMINI_CONFIG_JSON_DIR" || die 'Could not create the hardware snapshot directory.'
+  # Hardware snapshots are exported explicitly by our project-owned Scala
+  # script. Stock Gemmini needs no source hook during simulator elaboration.
+  unset GEMMINI_CONFIG_NAME GEMMINI_CONFIG_JSON_DIR
 
   if [[ $mode != run-only ]]; then
     printf 'Updating %s simulator...\n' "$config"

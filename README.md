@@ -43,11 +43,18 @@ stages `02_scheduled.mlir`, `03_bufferized.mlir`, `04_gemmini.mlir`,
 separate CPU LLVM IR files.
 
 Schedule compilation currently supports one FP32 matmul. Gemmini uses
-weight-stationary (WS) tile projection with fixed kernel ordering. Maintain
+weight-stationary (WS) tile projection with fixed kernel ordering. M/N tiles
+iterate in runtime loops with separate static boundary shapes; K tile commands
+are still expanded by Buddy. Maintain
 `workload_config.h` manually, then run `./simulation/run.sh artifacts/<case>`
 to build with Bazel, run through Chipyard, and check numerical results. Follow
 [simulation/README.md](simulation/README.md) for setup and options.
 The Python pipeline stops at LLVM IR generation.
+
+Custom Gemmini passes live in this project's `codegen/gemmini/native/` and load
+into Buddy as a pass plugin. The hardware JSON exporter is also project-owned.
+Third-party sources need no local patches; see [setup](docs/setup.md) for the
+plugin-enabled Buddy build and hardware export command.
 
 Use `prepare-workload --snapshot <Gemmini JSON>` to generate layer-specific
 mapping constraints after workload extraction. The current rule validates one

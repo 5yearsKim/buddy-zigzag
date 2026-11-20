@@ -64,8 +64,12 @@ uv run buddy-zigzag compile --target gemmini \
   --gemmini-tiles 4 4 4 --verify
 ```
 
-The schedule compiler applies M/N tiles to Linalg. Buddy lowers each tile to Gemmini WS
-operations, retaining accumulation across K tiles. The final `06_lowered.ll`
+The schedule compiler emits runtime M/N tile loops with separate static boundary
+shapes. Buddy lowers the tile bodies to Gemmini WS operations, retaining
+accumulation across K tiles; K commands remain expanded at compile time.
+In `02_scheduled.mlir`, look for `scf.for`; surviving loops become branches in
+`05_lowered.mlir`. Single-iteration loops can disappear during canonicalization.
+The final `06_lowered.ll`
 contains Gemmini RISC-V intrinsics. Continue with the
 [simulation guide](simulation.md) to link and execute it in Chipyard.
 `--verify` executes the tiled Linalg on CPU and compares it with Torch, without

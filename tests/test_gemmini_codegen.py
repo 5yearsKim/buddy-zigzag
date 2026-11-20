@@ -27,6 +27,29 @@ def load(source, *, path=RESULT, tiles=None):
     return GemminiScheduleProjector().load(path, prepared.workload.layers[0], text, SNAPSHOT, tiles=tiles)
 
 
+def prepare_matmul(tmp_path, m, n, k):
+    """Build rectangular and boundary cases without running mapping search."""
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    mlir = tmp_path / "matmul.mlir"
+    mlir.write_text(f"""module {{
+  func.func @forward(%a: tensor<{m}x{k}xf32>, %b: tensor<{k}x{n}xf32>) -> tensor<{m}x{n}xf32> {{
+    %zero = arith.constant dense<0.0> : tensor<{m}x{n}xf32>
+    %result = linalg.matmul ins(%a, %b : tensor<{m}x{k}xf32>, tensor<{k}x{n}xf32>)
+      outs(%zero : tensor<{m}x{n}xf32>) -> tensor<{m}x{n}xf32>
+    return %result : tensor<{m}x{n}xf32>
+  }}
+}}
+""")
+    prepared = DsePipeline().prepare_mlir(mlir, output_dir=tmp_path / "workload")
+    mapping = json.loads(RESULT.read_text())
+    mapping["inputs"]["layer"]["loop_dimensions"] = {"M": m, "N": n, "K": k}
+    factors = [f"(M, {m})", f"(N, {(n + 3) // 4})", f"(K, {(k + 3) // 4})"]
+    mapping["inputs"]["temporal_mapping"] = {"I": [factors, []], "W": [[], factors, []], "O": [factors, []]}
+    path = tmp_path / "mapping.json"
+    path.write_text(json.dumps(mapping))
+    return prepared, path
+
+
 def test_memory_tiles_are_aligned_and_keep_spatial_execution(source):
     schedule = load(source)
     assert schedule.tiles == {"M": 4, "N": 8, "K": 8}
@@ -90,13 +113,13 @@ def test_applier_preserves_full_k_and_static_tail_shapes(source):
 
 
 @pytest.mark.parametrize(
-    "case,tiles,shapes,counts",
+    "case,tiles,shapes,counts,bodies",
     [
-        ("matmul_small", (4, 4, 4), ((3, 5), (5, 7)), (4, 2, 2)),
-        ("matmul_rect", (16, 32, 8), ((64, 32), (32, 128)), (64, 16, 16)),
+        ("matmul_small", (4, 4, 4), ((3, 5), (5, 7)), (4, 2, 2), 2),
+        ("matmul_rect", (16, 32, 8), ((64, 32), (32, 128)), (64, 16, 16), 1),
     ],
 )
-def test_gemmini_pipeline_emits_ws_intrinsics_and_verifies_linalg(tmp_path, case, tiles, shapes, counts):
+def test_gemmini_pipeline_emits_ws_intrinsics_and_verifies_linalg(tmp_path, case, tiles, shapes, counts, bodies):
     prepared = DsePipeline().prepare_case(case, output_dir=tmp_path / "workload")
     result = ScheduleCompiler().compile(
         ScheduleCompileRequest(
@@ -112,8 +135,11 @@ def test_gemmini_pipeline_emits_ws_intrinsics_and_verifies_linalg(tmp_path, case
     assert out == prepared.output_dir / "lowered"
     assert not (out / "cpu_reference.mlir").exists()
     gemmini = (out / "04_gemmini.mlir").read_text()
-    assert gemmini.count("gemmini.tile_matmul") == counts[1]
-    assert gemmini.count("fullC = true") == counts[1]
+    assert gemmini.count("gemmini.tile_matmul") == bodies
+    assert gemmini.count("fullC = true") == bodies
+    if case == "matmul_rect":
+        assert gemmini.count("scf.for") == 2
+        assert "llvm.cond_br" in (out / "05_lowered.mlir").read_text()
     assert "linalg.matmul" not in gemmini
     assert "llvm.riscv" in (out / "06_lowered.ll").read_text()
     report = json.loads((out / "validation.json").read_text())
@@ -142,6 +168,90 @@ def test_gemmini_pipeline_emits_ws_intrinsics_and_verifies_linalg(tmp_path, case
     )
     np.testing.assert_allclose(output, a @ b, rtol=1e-4, atol=1e-5)
     assert (emulator.calls, emulator.loads, emulator.stores) == counts
+
+
+@pytest.mark.parametrize(
+    "m,n,k,bodies",
+    [(9, 11, 5, 4), (9, 8, 5, 2), (8, 11, 5, 2), (8, 8, 8, 1), (1, 1, 1, 1)],
+)
+def test_runtime_tiles_cover_full_tiles_and_all_boundaries(tmp_path, m, n, k, bodies):
+    import numpy as np
+    from gemmini_emulator import WsCommandEmulator
+
+    from buddy_zigzag.settings import Settings
+
+    prepared, mapping = prepare_matmul(tmp_path, m, n, k)
+    compiled = ScheduleCompiler().compile(
+        ScheduleCompileRequest(
+            workload_dir=prepared.output_dir,
+            result=mapping,
+            target="gemmini",
+            snapshot=SNAPSHOT,
+            gemmini_tiles=(4, 4, 4),
+            verify=True,
+        )
+    )
+    scheduled = (compiled.output_dir / "02_scheduled.mlir").read_text()
+    assert scheduled.count("linalg.matmul") == bodies
+    assert "tensor<?" not in scheduled
+    assert compiled.verification["status"] == "passed"
+
+    rng = np.random.default_rng(42)
+    a, b = [rng.standard_normal(shape).astype(np.float32) for shape in ((m, k), (k, n))]
+    output = np.full((m, n), np.nan, dtype=np.float32)
+    emulator = WsCommandEmulator(4)
+    emulator.execute(
+        (compiled.output_dir / "05_lowered.mlir").read_text(),
+        "forward",
+        [a, b],
+        output,
+        Settings.load().llvm_mlir_build_dir / "lib/libmlir_c_runner_utils.so",
+    )
+    np.testing.assert_allclose(output, a @ b, rtol=1e-4, atol=1e-5)
+    output_tiles = ((m + 3) // 4) * ((n + 3) // 4)
+    assert (emulator.calls, emulator.loads, emulator.stores) == (
+        output_tiles * ((k + 3) // 4),
+        output_tiles,
+        output_tiles,
+    )
+
+
+def test_generated_tile_code_does_not_grow_with_m_n_iterations(tmp_path):
+    lowered = []
+    for extent in (32, 512):
+        # The large case exceeds the previous 4096-output-tile expansion cap.
+        prepared, mapping = prepare_matmul(tmp_path / str(extent), extent, extent, 5)
+        compiled = ScheduleCompiler().compile(
+            ScheduleCompileRequest(
+                workload_dir=prepared.output_dir,
+                result=mapping,
+                target="gemmini",
+                snapshot=SNAPSHOT,
+                gemmini_tiles=(4, 4, 4),
+            )
+        )
+        scheduled = (compiled.output_dir / "02_scheduled.mlir").read_text()
+        assert scheduled.count("scf.for") == 2
+        assert scheduled.count("linalg.matmul") == 1
+        text = (compiled.output_dir / "05_lowered.mlir").read_text()
+        assert text.count('"gemmini.intr.loop_ws"') == 2  # K expansion is unchanged.
+        assert text.count("llvm.cond_br") == 2
+        lowered.append(text)
+    # Increasing both M/N tile counts 16x must not duplicate the command body.
+    assert abs(len(lowered[1].splitlines()) - len(lowered[0].splitlines())) < 20
+
+
+def test_remaining_k_expansion_is_still_bounded(source):
+    values = load(source, tiles=(4, 4, 4)).model_dump()
+    values["dimensions"]["K"] = 4 * 65536
+    for levels in values["temporal_by_operand"].values():
+        for level in levels:
+            for loop in level:
+                if loop["dimension"] == "K":
+                    loop["factor"] = 65536
+    # The two N shape variants would each emit 65536 K commands.
+    with pytest.raises(ValidationError, match="static WS call sites"):
+        GemminiSchedule.model_validate(values)
 
 
 def test_backend_options_are_separate():

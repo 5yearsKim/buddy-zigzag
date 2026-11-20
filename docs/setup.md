@@ -50,11 +50,34 @@ git -C third_party/buddy-mlir submodule update --init llvm
     -DLLVM_DIR="$PWD/llvm/build/lib/cmake/llvm" \
     -DLLVM_ENABLE_ASSERTIONS=ON -DCMAKE_BUILD_TYPE=Release \
     -DBUDDY_MLIR_ENABLE_PYTHON_PACKAGES=ON \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--export-dynamic" \
     -DPython3_EXECUTABLE="$PWD/.venv/bin/python" \
     -DPython_EXECUTABLE="$PWD/.venv/bin/python"
   cmake --build build --parallel 2
 )
 ```
+
+## Project-owned Gemmini passes
+
+The project maintains its own scheduled matmul conversion and WS command
+lowering in `src/buddy_zigzag/codegen/gemmini/native/`. The first
+`compile --target gemmini` builds the pass plugin with CMake against the selected
+LLVM/MLIR headers; later builds update it incrementally. All plugin outputs stay
+under this project's ignored `build/gemmini-plugin/` directory.
+
+`buddy-opt` loads it with `--load-pass-plugin`. A statically linked Buddy build
+must export symbols for plugins; the linker flag above enables that without
+editing dependency sources. For an existing Linux build, reconfigure it using
+the same source/build paths originally used, then rebuild the tools:
+
+```bash
+cmake -S third_party/buddy-mlir -B third_party/buddy-mlir/build \
+  -DCMAKE_EXE_LINKER_FLAGS="-Wl,--export-dynamic"
+cmake --build third_party/buddy-mlir/build --target buddy-opt buddy-translate --parallel 2
+```
+
+This project still requires the existing Gemmini dialect and Gemmini-capable
+LLVM toolchain. No local Buddy source patches are needed.
 
 ## Fresh Chipyard setup
 
@@ -76,17 +99,11 @@ a bundled snapshot and does not require this step.
 
 ## Generate hardware configuration
 
-With Chipyard prepared and the Gemmini JSON exporter present, export the resolved
+With Chipyard prepared, use this project's Scala exporter to export the resolved
 `GemminiFPConfigs.FP32DefaultConfig` parameters:
 
 ```bash
-mkdir -p hw_config
-(
-  bridge_root="$PWD"
-  cd third_party/chipyard
-  source env.sh
-  sbt "gemmini/runMain gemmini.GemminiConfigExportMain --output $bridge_root/hw_config/fp32_parameters.json"
-)
+./scripts/export_gemmini_config.sh hw_config/fp32_parameters.json
 uv run buddy-zigzag prepare-hardware \
   --snapshot hw_config/fp32_parameters.json
 ```
@@ -95,8 +112,10 @@ The default outputs are `hw_config/hardware.yaml` and
 `hw_config/hardware.manifest.json`; use `--out` to choose another path.
 The generated `hw_config/` directory is ignored by Git. This snapshot resolves
 the Scala configuration object; it does not elaborate a complete SoC.
-To capture actual elaboration parameters, set `GEMMINI_CONFIG_NAME` and
-`GEMMINI_CONFIG_JSON_DIR` during a Chipyard build.
+The script adds the project's Scala file to that sbt session's sources only.
+It does not edit Gemmini source files or install an elaboration hook. For another
+configuration, update the configuration selected by the project-owned exporter
+and use a matching simulator config.
 
 The current model supports square FP32 arrays with 1×1 PE tiles and WS dataflow.
 Energy/area costs are placeholders. When changing the array size, regenerate the

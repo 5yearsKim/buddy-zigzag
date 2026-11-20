@@ -151,9 +151,12 @@ class GemminiSchedule(Schema):
             raise ValueError("Gemmini tiles exceed double-buffered scratchpad capacity")
         if m * n * dim > hw.accumulator.banks * hw.accumulator.rows_per_bank // 2:
             raise ValueError("Gemmini tiles exceed double-buffered accumulator capacity")
-        count = prod((self.dimensions[axis] + self.tiles[axis] - 1) // self.tiles[axis] for axis in ("M", "N"))
-        if count > 4096:
-            raise ValueError("Initial static Gemmini tiling supports at most 4096 output tiles")
-        if count * ((self.dimensions["K"] + self.tiles["K"] - 1) // self.tiles["K"]) > 65536:
-            raise ValueError("Initial Gemmini lowering supports at most 65536 WS kernel calls")
+        # M/N iterate at runtime. Only full/tail shape variants and the K
+        # expansion in Buddy contribute distinct WS call sites to generated IR.
+        variants = prod(
+            int(self.dimensions[axis] >= self.tiles[axis]) + int(self.dimensions[axis] % self.tiles[axis] != 0)
+            for axis in ("M", "N")
+        )
+        if variants * ((self.dimensions["K"] + self.tiles["K"] - 1) // self.tiles["K"]) > 65536:
+            raise ValueError("Initial Gemmini lowering supports at most 65536 static WS call sites")
         return self
