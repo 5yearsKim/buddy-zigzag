@@ -44,10 +44,10 @@ separate CPU LLVM IR files.
 
 Schedule compilation currently supports one FP32 matmul. Gemmini uses
 weight-stationary (WS) tile projection with fixed kernel ordering. Maintain
-`workload_config.h` manually, then use Bazel to run Buddy's `llc`, cross-compile
-the static C harness/runtime, and link `program.riscv`. Follow
-[simulation/README.md](simulation/README.md) to build and run through Chipyard
-using Bazel and shell commands. The Python pipeline stops at LLVM IR generation.
+`workload_config.h` manually, then run `./simulation/run.sh artifacts/<case>`
+to build with Bazel, run through Chipyard, and check numerical results. Follow
+[simulation/README.md](simulation/README.md) for setup and options.
+The Python pipeline stops at LLVM IR generation.
 
 Use `prepare-workload --snapshot <Gemmini JSON>` to generate layer-specific
 mapping constraints after workload extraction. The current rule validates one
@@ -73,7 +73,7 @@ src/buddy_zigzag/
     pipeline.py     # DsePipeline orchestration and PrepareRequest
     settings.py     # Native runtime configuration
     cli.py          # Preparation, search, and compilation
-simulation/         # Bazel build commands, local compiler inputs, reusable C sources, and terminal guide
+simulation/         # Simulation runner, Bazel build rules, reusable C sources, and guides
 MODULE.bazel        # Bazel module and local input selection
 hw_config/          # Generated hardware YAML, manifests, and parameter snapshots; ignored by Git
 third_party/        # Buddy-MLIR, ZigZag, Chipyard submodules

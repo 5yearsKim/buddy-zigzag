@@ -1,0 +1,20 @@
+/* Workload configuration template.
+ * Copy to <workload>/simulation/workload_config.h, then replace each @...@
+ * placeholder with the value for your compiled workload before building.
+ * Dimensions: lowered/schedule.json. Entry and argument order: 06_lowered.ll.
+ */
+#ifndef BUDDY_ZIGZAG_WORKLOAD_CONFIG_H
+#define BUDDY_ZIGZAG_WORKLOAD_CONFIG_H
+
+#define WORKLOAD_M @WORKLOAD_M@
+#define WORKLOAD_N @WORKLOAD_N@
+#define WORKLOAD_K @WORKLOAD_K@
+#define WORKLOAD_ENTRY @WORKLOAD_ENTRY@
+/* Use 1 for LHS first, or 0 for reversed inputs. */
+#define WORKLOAD_ARG0_IS_LHS @WORKLOAD_ARG0_IS_LHS@
+
+/* Default numerical tolerances; adjust if your workload needs different ones. */
+#define WORKLOAD_ATOL 1e-4
+#define WORKLOAD_RTOL 1e-4
+
+#endif

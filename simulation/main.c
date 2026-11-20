@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static float lhs[WORKLOAD_M * WORKLOAD_K] __attribute__((aligned(64)));
 static float rhs[WORKLOAD_K * WORKLOAD_N] __attribute__((aligned(64)));
@@ -77,5 +78,8 @@ int main(void) {
   printf(",\"mismatches\":");
   print_u64(mismatches);
   printf("}\n");
-  return mismatches ? 1 : 0;
+  /* Flush the result before bypassing the HTIF nano libc exit cleanup,
+   * which can fault in __call_exitprocs with this toolchain. */
+  fflush(stdout);
+  _Exit(mismatches ? 1 : 0);
 }
